@@ -37,4 +37,46 @@
 ![](photos/2.jpg)
 ![](photos/3.jpg)
 10. Зробив коміт з цими змінами до  свого репозиторію.
-
+11. Встановив бібліотеку ```requests``` та запустив файл ```monitoring.py```
+      #####Результат - створений файл ```server.log``` з наступним вмістом:
+           
+        INFO 2020-11-22 17:09:33,877 root : Сервер доступний. Час на сервері: test1
+        INFO 2020-11-22 17:09:33,878 root : Запитувана сторінка: : test2
+        INFO 2020-11-22 17:09:33,878 root : Відповідь сервера місти наступні поля:
+        INFO 2020-11-22 17:09:33,878 root : Ключ: date, Значення: test1
+        INFO 2020-11-22 17:09:33,878 root : Ключ: current_page, Значення: test2
+        INFO 2020-11-22 17:09:33,878 root : Ключ: server_info, Значення: test3
+        INFO 2020-11-22 17:09:33,878 root : Ключ: client_info, Значення: test4
+12. Відкрив сторінку ```health``` в браузері:<br/>
+![](photos/4.jpg)
+13. * модифікував функцію ```health``` щоб генерувався перерік заданих даних:
+        
+          def health(request):
+              response = {'date': get_current_time(), 'current_page': request.build_absolute_uri(), 'server_info': request.META['SERVER_NAME'] + " " + sys.platform, 'client_info': request.META['HTTP_USER_AGENT'] + "    IP:" + request.META['REMOTE_ADDR']}
+              return JsonResponse(response)
+    * дописав функціонал програми моніторингу сайту:
+          
+          def main(url):
+              try:
+                  r = requests.get(url)
+              except requests.exceptions.RequestException as e:
+                  logging.error(e)
+                  logging.error("Немає зв'язку з сервером")
+                  raise ConnectionError
+          
+              if r:
+                  data = json.loads(r.content)
+                  logging.info("Сервер доступний. Час на сервері: %s", data['date'])
+                  logging.info("Запитувана сторінка: : %s", data['current_page'])
+                  logging.info("Відповідь сервера містить наступні поля:")
+                  for key in data.keys():
+                      logging.info("Ключ: %s, Значення: %s", key, data[key])
+    * добавив цикл з затримкою оновлення 60 секунд та запустив програму у бекграунді:
+            
+            python3 monitoring.py &
+    * додав скрипт для запуску моніторингу:
+            
+            [scripts]
+            server = "python manage.py runserver 0.0.0.0:8000"
+            monitoring = "python monitoring.py"
+14. Запустив сервер та переконався що головна сторінка відображається. Запустив моніторинг. Зробив коміт з усіма змінами.
