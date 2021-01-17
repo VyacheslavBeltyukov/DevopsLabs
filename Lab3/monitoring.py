@@ -30,6 +30,7 @@ def main(url):
             for key in data.keys():
                 logging.info("Ключ: %s, Значення: %s", key, data[key])
         time.sleep(60)
+    return 0
 
 if __name__ == '__main__':
     main("http://localhost:8000/health")
